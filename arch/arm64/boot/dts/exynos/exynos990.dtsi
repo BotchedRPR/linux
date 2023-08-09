@@ -1,0 +1,440 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Copyright (c) 2023, Igor Belwon <thenxguy0@gmail.com>
+ */
+
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+
+/ {
+    #address-cells = <2>;
+	#size-cells = <2>;
+
+    arm-pmu {
+		compatible = "arm,cortex-a55-pmu";
+		interrupts = <GIC_SPI 89 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 90 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 91 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 92 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 109 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 110 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 111 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-affinity = <&cpu0>, <&cpu1>, <&cpu2>, <&cpu3>,
+				     <&cpu4>, <&cpu5>, <&cpu6>, <&cpu7>;
+	};
+
+    cpus {
+        #address-cells = <2>;
+		#size-cells = <0>;
+
+		cpu0: cpu@0 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a55";
+			reg = <0x0>;
+			enable-method = "psci";
+		};
+
+		cpu1: cpu@1 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a55";
+			reg = <0x1>;
+            enable-method = "psci";
+		};
+
+		cpu2: cpu@2 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a55";
+			reg = <0x2>;
+			enable-method = "psci";
+		};
+
+		cpu3: cpu@3 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a55";
+			reg = <0x3>;
+			enable-method = "psci";
+		};
+
+		cpu4: cpu@100 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a76";
+			reg = <0x4>;
+            enable-method = "psci";
+		};
+
+		cpu5: cpu@101 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a76";
+			reg = <0x5>;
+			enable-method = "psci";
+		};
+
+        /* This is the custom CPU side. Not currently in mainline tree. */
+        /*
+		cpu6: cpu@200 {
+			device_type = "cpu";
+			compatible = "arm,lion\0arm,armv8";
+			reg = <0x00 0x100>;
+			enable-method = "psci";
+			cpu-idle-states = <0x13d>;
+			sched-energy-data = <0x13e>;
+			i-cache-size = <0x10000>;
+			i-cache-line-size = <0x80>;
+			i-cache-sets = <0x80>;
+			d-cache-size = <0x10000>;
+			d-cache-line-size = <0x40>;
+			d-cache-sets = <0x100>;
+			next-level-cache = <0x13f>;
+			moce-factors = <0x140>;
+			phandle = <0xbb>;
+		};
+
+		cpu7: cpu@201 {
+			device_type = "cpu";
+			compatible = "arm,lion\0arm,armv8";
+			reg = <0x00 0x101>;
+			enable-method = "psci";
+			cpu-idle-states = <0x13d>;
+			sched-energy-data = <0x13e>;
+			i-cache-size = <0x10000>;
+			i-cache-line-size = <0x80>;
+			i-cache-sets = <0x80>;
+			d-cache-size = <0x10000>;
+			d-cache-line-size = <0x40>;
+			d-cache-sets = <0x100>;
+			next-level-cache = <0x13f>;
+			moce-factors = <0x140>;
+			phandle = <0xbc>;
+		}; */
+
+        cpu-map {
+			cluster0 {
+				core0 {
+					cpu = <&cpu0>;
+				};
+
+				core1 {
+					cpu = <&cpu1>;
+				};
+
+				core2 {
+					cpu = <&cpu2>;
+				};
+
+				core3 {
+					cpu = <&cpu3>;
+				};
+			};
+
+			cluster1 {
+				core0 {
+					cpu = <&cpu4>;
+				};
+
+				core1 {
+					cpu = <&cpu5>;
+				};
+			};
+
+            /* Cluster 2 is the custom CPUs */
+		};
+    }
+
+    memory {
+		device_type = "memory";
+		/* We expect the bootloader to fill in the reg */
+		reg = <0 0 0 0>;
+	};
+
+	/* To be cleaned up... */
+	timer {
+		compatible = "arm,armv8-timer";
+		interrupts = <0x01 0x0d 0xff08 0x01 0x0e 0xff08 0x01 0x0b 0xff08 0x01 0x0a 0xff08>;
+		clock-frequency = <0x18cba80>;
+		use-clocksource-only;
+	};
+
+		reserved-memory {
+		#address-cells = <0x02>;
+		#size-cells = <0x01>;
+		ranges;
+		phandle = <0x224>;
+
+		ion_video_stream {
+			compatible = "exynos9820-ion";
+			size = <0x4800000>;
+			alloc-ranges = <0x00 0x40000000 0xb0000000>;
+			alignment = <0x00 0x400000>;
+			ion,heapname = "vstream_heap";
+			ion,secure;
+			ion,reusable;
+			ion,protection_id = <0x03>;
+			ion,alignment = <0x10000>;
+		};
+
+		ion_crypto {
+			compatible = "exynos9820-ion";
+			size = <0x1800000>;
+			alloc-ranges = <0x0a 0x00 0x10000000 0x00 0x40000000 0xb0000000>;
+			alignment = <0x00 0x400000>;
+			ion,heapname = "crypto_heap";
+			ion,reusable;
+			ion,alignment = <0x10000>;
+		};
+
+		el3mon_reserve {
+			compatible = "exynos,el3mon";
+			reg = <0x00 0xbab00000 0x5500000>;
+		};
+
+		ion_npu_fw {
+			compatible = "exynos9820-ion";
+			size = <0x500000>;
+			ion,heapname = "npu_fw";
+			ion,alignment = <0x10000>;
+		};
+
+		sec_debug_magic {
+			compatible = "exynos,sec_debug_magic";
+			reg = <0x00 0x80000000 0x1000>;
+		};
+
+		sec_rdx_bootdev {
+			compatible = "exynos,sec_debug_rdx_bootdev";
+			no-ship;
+			reg = <0x08 0x80000000 0xad00000>;
+		};
+
+		debug_snapshot {
+			#address-cells = <0x02>;
+			#size-cells = <0x01>;
+
+			header {
+				compatible = "debug-snapshot,header";
+				reg = <0x00 0xfd900000 0x10000>;
+			};
+
+			log_kernel {
+				compatible = "debug-snapshot,log_kernel";
+				reg = <0x00 0xfd910000 0x200000>;
+			};
+
+			log_platform {
+				compatible = "debug-snapshot,log_platform";
+				reg = <0x00 0xfdb10000 0x400000>;
+			};
+
+			log_sfr {
+				compatible = "debug-snapshot,log_sfr";
+				reg = <0x00 0xfdf10000 0x100000>;
+			};
+
+			log_s2d {
+				compatible = "debug-snapshot,log_s2d";
+				reg = <0x00 0xeb310000 0x1500000>;
+			};
+
+			log_arrdumpreset {
+				compatible = "debug-snapshot,log_arrdumpreset";
+				reg = <0x00 0xfe010000 0xa00000>;
+			};
+
+			log_arrdumppanic {
+				compatible = "debug-snapshot,log_arrdumppanic";
+				reg = <0x00 0xec810000 0xa00000>;
+			};
+
+			log_etm {
+				compatible = "debug-snapshot,log_etm";
+				reg = <0x00 0xfea10000 0x100000>;
+			};
+
+			log_bcm {
+				compatible = "debug-snapshot,log_bcm";
+				reg = <0x00 0xfeb10000 0x400000>;
+			};
+
+			log_llc {
+				compatible = "debug-snapshot,log_llc";
+				reg = <0x00 0xfef10000 0x400000>;
+			};
+
+			log_dbgc {
+				compatible = "debug-snapshot,log_dbgc";
+				reg = <0x00 0xff310000 0xf0000>;
+			};
+
+			log_pstore {
+				compatible = "debug-snapshot,log_pstore";
+				reg = <0x00 0xeb308000 0x8000>;
+			};
+
+			log_kevents {
+				compatible = "debug-snapshot,log_kevents";
+				reg = <0x00 0xff400000 0x800000>;
+			};
+
+			log_fatal {
+				compatible = "debug-snapshot,log_fatal";
+				reg = <0x00 0xffc00000 0x400000>;
+			};
+		};
+
+		seclog_mem {
+			compatible = "exynos,seclog";
+			reg = <0x00 0xc3000000 0x80000>;
+		};
+
+		s2mpu_table {
+			compatible = "exynos,s2mpu_table";
+			reg = <0x00 0xc1800000 0x300000>;
+		};
+
+		abox-dbg {
+			compatible = "exynos,abox_dbg";
+			size = <0x5600000>;
+			alloc-ranges = <0x00 0xc0000000 0x20000000>;
+			phandle = <0xa2>;
+		};
+
+		abox-slog {
+			compatible = "exynos,abox_slog";
+			size = <0x2800000>;
+			alloc-ranges = <0x00 0xc0000000 0x20000000>;
+			phandle = <0x225>;
+		};
+
+		abox-rmem {
+			compatible = "exynos,abox_rmem";
+			reg = <0x00 0xf8000000 0x2a00000>;
+			phandle = <0x226>;
+		};
+
+		abox-rdma-compr {
+			compatible = "exynos,abox_rdma_compr_buffer";
+			reg = <0x00 0xf7fb0000 0x50000>;
+			phandle = <0x227>;
+		};
+
+		vts-rmem {
+			compatible = "exynos,vts_rmem";
+			size = <0x200000>;
+			alloc-ranges = <0x00 0xc5000000 0x15000000>;
+			phandle = <0x228>;
+		};
+
+		abox-pci-rmem {
+			compatible = "exynos,abox_pci_rmem";
+			reg = <0x00 0xf4200000 0x800000>;
+			phandle = <0xa3>;
+		};
+
+		dpado-rmem {
+			compatible = "exynos,dp_ado_rmem";
+			size = <0x200000>;
+			alloc-ranges = <0x00 0xc0000000 0x20000000>;
+			phandle = <0x229>;
+		};
+
+		camera_rmem {
+			compatible = "exynos,camera_rmem";
+			reg = <0x00 0xed210000 0x100000>;
+			phandle = <0x22a>;
+		};
+
+		secure_camera {
+			compatible = "exynos9820-ion";
+			ion,heapname = "secure_camera_heap";
+			reg = <0x00 0x96000000 0x3200000>;
+			ion,secure;
+			ion,protection_id = <0x0b>;
+			ion,alignment = <0x10000>;
+		};
+
+		camera {
+			compatible = "exynos9820-ion";
+			size = <0x22f00000>;
+			alloc-ranges = <0x0a 0x00 0xffffffff 0x09 0x00 0xffffffff>;
+			alignment = <0x00 0x400000>;
+			ion,heapname = "camera_heap";
+			ion,recyclable;
+			phandle = <0x22b>;
+		};
+
+		teegris_rmem {
+			compatible = "exynos,teegris_rmem";
+			reg = <0x00 0xed310000 0x2000>;
+			phandle = <0x22c>;
+		};
+
+		cp_rmem {
+			compatible = "exynos,modem_if";
+			reg = <0x00 0xf0000000 0x800000>;
+			rmem_index = <0x00>;
+		};
+
+		cp_msi_rmem {
+			compatible = "exynos,modem_if";
+			reg = <0x00 0xf6200000 0x1000>;
+			rmem_index = <0x01>;
+		};
+
+		cp_rmem_2 {
+			compatible = "exynos,modem_if";
+			reg = <0x00 0xd0000000 0x4000000>;
+			rmem_index = <0x02>;
+		};
+
+		wifi_msi_rmem {
+			compatible = "exynos,pcie_rmem";
+			reg = <0x00 0xf7200000 0x1000>;
+		};
+	};
+
+	ion-hpa-heap {
+		#address-cells = <0x02>;
+		#size-cells = <0x01>;
+		ranges;
+		ion,hpa_limit = <0x0a 0x00>;
+		ion,hpa_alloc_exception = <0x00 0xf0000000 0x10000000>;
+
+		ion_video_fw {
+			compatible = "exynos9820-ion";
+			ion,heapname = "vfw_heap";
+			ion,secure;
+			ion,protection_id = <0x02>;
+			ion,alignment = <0x10000>;
+		};
+
+		ion_video_nfw {
+			compatible = "exynos9820-ion";
+			ion,heapname = "vnfw_heap";
+			ion,protection_id = <0x07>;
+			ion,alignment = <0x10000>;
+		};
+
+		ion_video_frame {
+			compatible = "exynos9820-ion";
+			ion,heapname = "vframe_heap";
+			ion,secure;
+			ion,protection_id = <0x05>;
+			ion,alignment = <0x10000>;
+		};
+
+		ion_video_scaler {
+			compatible = "exynos9820-ion";
+			ion,heapname = "vscaler_heap";
+			ion,secure;
+			ion,protection_id = <0x06>;
+			ion,alignment = <0x10000>;
+		};
+
+		ion_gpu_buffer {
+			compatible = "exynos9820-ion";
+			ion,heapname = "gpu_buffer";
+			ion,secure;
+			ion,protection_id = <0x09>;
+			ion,alignment = <0x10000>;
+		};
+	};
+};
