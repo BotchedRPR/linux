@@ -141,6 +141,11 @@
 		};
     };
 
+    memory {
+		device_type = "memory";
+		/* We expect the bootloader to fill in the reg */
+		reg = <0 0 0 0>;
+	};
 
 	psci {
 		compatible = "arm,psci";
@@ -155,14 +160,20 @@
 
 			/* To be cleaned up... */
 			interruptctl: interrupt-controller@10100000 {
-				compatible = "arm,cortex-a15-gic";
+				compatible = "arm,gic-400";
 				#interrupt-cells = <0x03>;
 				interrupt-controller;
 				reg = <0x00 0x10101000 0x1000 0x00 0x10102000 0x1000 0x00 0x10104000 0x2000 0x00 0x10106000 0x2000>;
 				interrupts = <0x01 0x09 0xf04>;
 		};
-	};
 
+		mct@10040000 {
+			compatible = "samsung,exynos4210-mct";
+			reg = <0x00 0x10040000 0x800>;
+			interrupts = <0x00 0x01 0x02 0x03 0x04 0x05 0x06 0x07 0x08 0x09 0x0a 0x0b>;
+	};
+	
+	};
 	timer {
 		compatible = "arm,armv8-timer";
 		interrupts = <0x01 0x0d 0xff08 0x01 0x0e 0xff08 0x01 0x0b 0xff08 0x01 0x0a 0xff08>;
