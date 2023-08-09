@@ -8,6 +8,7 @@
 / {
     #address-cells = <2>;
 	#size-cells = <2>;
+	interrupt-parent = <&interruptctl>;
 
     arm-pmu {
 		compatible = "arm,cortex-a55-pmu";
@@ -20,7 +21,7 @@
 			     <GIC_SPI 110 IRQ_TYPE_LEVEL_HIGH>,
 			     <GIC_SPI 111 IRQ_TYPE_LEVEL_HIGH>;
 		interrupt-affinity = <&cpu0>, <&cpu1>, <&cpu2>, <&cpu3>,
-				     <&cpu4>, <&cpu5>, <&cpu6>, <&cpu7>;
+				     <&cpu4>, <&cpu5>;
 	};
 
     cpus {
@@ -138,7 +139,7 @@
 
             /* Cluster 2 is the custom CPUs */
 		};
-    }
+    };
 
     memory {
 		device_type = "memory";
@@ -147,7 +148,7 @@
 	};
 
 	/* To be cleaned up... */
-	interrupt-controller@10100000 {
+	interruptctl: interrupt-controller@10100000 {
 		compatible = "arm,gic-v3";
 		#interrupt-cells = <0x03>;
 		#address-cells = <0x00>;
@@ -156,18 +157,33 @@
 		interrupts = <0x01 0x09 0xf04>;
 		phandle = <0x01>;
 	};
+
+	psci {
+		compatible = "arm,psci";
+		method = "smc";
+		cpu_suspend = <0xC4000001>;
+		cpu_off = <0x84000002>;
+		cpu_on = <0xC4000003>;
+	};
+
+	soc: soc {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		anges = <0 0 0 0xffffffff>;
+
+	};
+
 	timer {
 		compatible = "arm,armv8-timer";
 		interrupts = <0x01 0x0d 0xff08 0x01 0x0e 0xff08 0x01 0x0b 0xff08 0x01 0x0a 0xff08>;
 		clock-frequency = <0x18cba80>;
-		use-clocksource-only;
 	};
 
 	reserved-memory {
 		#address-cells = <0x02>;
 		#size-cells = <0x01>;
 		ranges;
-		phandle = <0x224>;
 
 		ion_video_stream {
 			compatible = "exynos9820-ion";
