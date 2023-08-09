@@ -147,6 +147,15 @@
 	};
 
 	/* To be cleaned up... */
+	interrupt-controller@10100000 {
+		compatible = "arm,gic-v3";
+		#interrupt-cells = <0x03>;
+		#address-cells = <0x00>;
+		interrupt-controller;
+		reg = <0x00 0x10101000 0x1000 0x00 0x10102000 0x1000 0x00 0x10104000 0x2000 0x00 0x10106000 0x2000>;
+		interrupts = <0x01 0x09 0xf04>;
+		phandle = <0x01>;
+	};
 	timer {
 		compatible = "arm,armv8-timer";
 		interrupts = <0x01 0x0d 0xff08 0x01 0x0e 0xff08 0x01 0x0b 0xff08 0x01 0x0a 0xff08>;
@@ -154,7 +163,7 @@
 		use-clocksource-only;
 	};
 
-		reserved-memory {
+	reserved-memory {
 		#address-cells = <0x02>;
 		#size-cells = <0x01>;
 		ranges;
