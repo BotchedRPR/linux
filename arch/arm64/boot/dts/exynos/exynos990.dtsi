@@ -8,7 +8,7 @@
 / {
     #address-cells = <2>;
 	#size-cells = <2>;
-	interrupt-parent = <&interruptctl>;
+	interrupt-parent = <&gic>;
 
     arm-pmu {
 		compatible = "arm,cortex-a55-pmu";
@@ -22,9 +22,8 @@
 			     <GIC_SPI 111 IRQ_TYPE_LEVEL_HIGH>;
 		interrupt-affinity = <&cpu0>;
 	};
-
     cpus {
-        #address-cells = <1>;
+        #address-cells = <2>;
 		#size-cells = <0>;
 
 		cpu0: cpu@0 {
@@ -34,10 +33,91 @@
 			enable-method = "psci";
 		};
 
+		cpu1: cpu@1 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a55";
+			reg = <0x1>;
+            enable-method = "psci";
+		};
+
+		cpu2: cpu@2 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a55";
+			reg = <0x2>;
+			enable-method = "psci";
+		};
+
+		cpu3: cpu@3 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a55";
+			reg = <0x3>;
+			enable-method = "psci";
+		};
+
+		cpu4: cpu@100 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a76";
+			reg = <0x4>;
+            enable-method = "psci";
+		};
+
+		cpu5: cpu@101 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a76";
+			reg = <0x5>;
+			enable-method = "psci";
+		};
+
+		cpu6: cpu@200 {
+			device_type = "cpu";
+			compatible = "arm,mongoose", "arm,armv8";
+			reg = <0x00 0x100>;
+			enable-method = "psci";
+		};
+
+		cpu7: cpu@201 {
+			device_type = "cpu";
+			compatible = "arm,mongoose", "arm,armv8";
+			reg = <0x00 0x101>;
+			enable-method = "psci";
+		};
+
         cpu-map {
 			cluster0 {
 				core0 {
 					cpu = <&cpu0>;
+				};
+
+				core1 {
+					cpu = <&cpu1>;
+				};
+
+				core2 {
+					cpu = <&cpu2>;
+				};
+
+				core3 {
+					cpu = <&cpu3>;
+				};
+			};
+
+			cluster1 {
+				core0 {
+					cpu = <&cpu4>;
+				};
+
+				core1 {
+					cpu = <&cpu5>;
+				};
+			};
+
+			cluster2 {
+				core0 {
+					cpu = <&cpu6>;
+				};
+
+				core1 {
+					cpu = <&cpu7>;
 				};
 			};
 		};
@@ -54,13 +134,14 @@
 		#size-cells = <1>;
 		ranges = <0 0 0 0xffffffff>;
 
-			/* To be cleaned up... */
-			interruptctl: interrupt-controller@10100000 {
-				compatible = "arm,cortex-a15-gic";
-				#interrupt-cells = <0x03>;
-				interrupt-controller;
-				reg = <0x00 0x10101000 0x1000 0x00 0x10102000 0x1000 0x00 0x10104000 0x2000 0x00 0x10106000 0x2000>;
-				interrupts = <0x01 0x09 0xf04>;
+		gic: interrupt-controller@12301000 {
+			compatible = "arm,gic-400";
+			#interrupt-cells = <3>;
+			#address-cells = <0>;
+			interrupt-controller;
+			reg = <0x00 0x10101000 0x1000 0x00 0x10102000 0x1000 0x00 0x10104000 0x2000 0x00 0x10106000 0x2000>;
+			interrupts = <GIC_PPI 9 (GIC_CPU_MASK_SIMPLE(8) |
+						 IRQ_TYPE_LEVEL_HIGH)>;
 		};
 			mct@10040000 {
 			compatible = "samsung,exynos4210-mct";
