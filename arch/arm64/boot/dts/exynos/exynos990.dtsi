@@ -130,15 +130,17 @@
 
 fixed-rate-clocks {
 	
-	  oscclk: clock-oscclk {
-    compatible = "fixed-clock";
-    clock-output-names = "oscclk";
-    #clock-cells = <0>;
+	  	oscclk: xxti {
+    	compatible = "fixed-clock";
+    	clock-output-names = "fin_pll";
+		clock-frequency = <26000000>;
+    	#clock-cells = <0>;
   };
-	mct_clock: mct-clock {
+		mctclock: fixed-clock {
 		compatible = "fixed-clock";
 		#clock-cells = <0>;
 		clock-frequency = <45833333>;
+		clock-output-names = "mct";
 	};
 
 };
@@ -164,9 +166,20 @@ fixed-rate-clocks {
 			mct@10040000 {
 			compatible = "samsung,exynos4210-mct";
 			reg = <0x00 0x10040000 0x800>;
-			interrupts = <0x00 0x01 0x02 0x03 0x04 0x05 0x06 0x07 0x08 0x09 0x0a 0x0b>;
-			clocks = <&oscclk>, <&mct_clock>;
-			clock-names = "oscclk" ,"mct_clock";
+			interrupts = <GIC_SPI 234 IRQ_TYPE_LEVEL_HIGH>,
+				<GIC_SPI 235 IRQ_TYPE_LEVEL_HIGH>,
+				<GIC_SPI 236 IRQ_TYPE_LEVEL_HIGH>,
+				<GIC_SPI 237 IRQ_TYPE_LEVEL_HIGH>,
+				<GIC_SPI 238 IRQ_TYPE_LEVEL_HIGH>,
+				<GIC_SPI 239 IRQ_TYPE_LEVEL_HIGH>,
+				<GIC_SPI 240 IRQ_TYPE_LEVEL_HIGH>,
+				<GIC_SPI 241 IRQ_TYPE_LEVEL_HIGH>,
+				<GIC_SPI 242 IRQ_TYPE_LEVEL_HIGH>,
+				<GIC_SPI 243 IRQ_TYPE_LEVEL_HIGH>,
+				<GIC_SPI 244 IRQ_TYPE_LEVEL_HIGH>,
+				<GIC_SPI 245 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&oscclk>, <&mctclock>;
+			clock-names = "fin_pll", "mct";
 	};
 	};
 	timer {
