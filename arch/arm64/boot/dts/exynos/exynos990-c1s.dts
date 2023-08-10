@@ -10,32 +10,17 @@
 / {
 	model = "Samsung Galaxy Note20";
 	compatible = "samsung,c1s", "samsung,exynos990";
-    
-    memory@e1900000 {
-		device_type = "memory";
-		reg = <0x00 0xe1900000 0x1e700000>;
-	};
 
-    memory@c0000000 {
+	memory@880000000 {
 		device_type = "memory";
-		reg = <0x00 0xc0000000 0x00>;
-	};
-
-    memory@80000000 {
-		device_type = "memory";
-		reg = <0x00 0x80000000 0x3ab00000>;
-	};
-
-	memory@c1200000 {
-		device_type = "memory";
-		reg = <0x00 0xc1200000 0x1ee00000>;
+		reg = <0x08 0x80000000 0x20000000>;
 	};
 
     aliases {
 	};
 
 	chosen {
-		bootargs = "earlycon=simplefb,0xF1000000,1080x2400x32 console=simplefb";
+		bootargs = "earlycon=simplefb,0xF1000000,1080x2400x32";
 
 		#address-cells = <2>;
 		#size-cells = <2>;
