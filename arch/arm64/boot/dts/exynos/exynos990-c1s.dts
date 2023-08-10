@@ -101,7 +101,7 @@
 	};
 
 	chosen {
-		bootargs = "earlycon=simplefb,0xF1000000,1080,2400 console=simplefb";
+		bootargs = "earlycon=simplefb,0xF1000000,1080x2400x32 console=simplefb";
 
 		#address-cells = <2>;
 		#size-cells = <2>;
