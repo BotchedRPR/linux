@@ -11,16 +11,16 @@
 	model = "Samsung Galaxy Note20";
 	compatible = "samsung,c1s", "samsung,exynos990";
 
-	memory@880000000 {
+    memory@80000000 {
 		device_type = "memory";
-		reg = <0x08 0x80000000 0x20000000>;
+		reg = <0 0x90000000 0 0x8000000>;
 	};
 
     aliases {
 	};
 
 	chosen {
-		bootargs = "earlycon=simplefb,0xF1000000,1080x2400x32";
+		bootargs = "earlycon=simplefb,0xF1000000,1080x2400x32 console=simplefb";
 
 		#address-cells = <2>;
 		#size-cells = <2>;
