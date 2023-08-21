@@ -10,17 +10,6 @@
 	#size-cells = <2>;
 	interrupt-parent = <&gic>;
 
-    arm-pmu {
-		compatible = "arm,cortex-a55-pmu";
-		interrupts = <GIC_SPI 89 IRQ_TYPE_LEVEL_HIGH>,
-			     <GIC_SPI 90 IRQ_TYPE_LEVEL_HIGH>,
-			     <GIC_SPI 91 IRQ_TYPE_LEVEL_HIGH>,
-			     <GIC_SPI 92 IRQ_TYPE_LEVEL_HIGH>,
-			     <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>,
-			     <GIC_SPI 109 IRQ_TYPE_LEVEL_HIGH>;
-		interrupt-affinity = <&cpu0>, <&cpu1>, <&cpu2>, <&cpu3>,
-				     <&cpu4>, <&cpu5>;
-	};
     cpus {
 		#address-cells = <1>;
 		#size-cells = <0>;
@@ -66,6 +55,9 @@
 			reg = <0x5>;
 			enable-method = "psci";
 		};
+		
+		/* Mongoose cores */
+
         cpu-map {
 			cluster0 {
 				core0 {
@@ -97,26 +89,39 @@
 		};
     };
 
+    arm-pmu {
+		compatible = "arm,cortex-a55-pmu";
+		interrupts = <GIC_SPI 89 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 90 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 91 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 92 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 109 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-affinity = <&cpu0>, <&cpu1>, <&cpu2>, <&cpu3>,
+				     <&cpu4>, <&cpu5>;
+	};
+
 	psci {
 		compatible = "arm,psci";
 		method = "smc";
 	};
-fixed-rate-clocks {
-	
+
+	fixed-rate-clocks {	
 	  	oscclk: xxti {
-    	compatible = "fixed-clock";
-    	clock-output-names = "fin_pll";
-		clock-frequency = <26000000>;
-    	#clock-cells = <0>;
-  };
+    		compatible = "fixed-clock";
+    		clock-output-names = "fin_pll";
+			clock-frequency = <26000000>;
+    		#clock-cells = <0>;
+  		};
+
 		mctclock: fixed-clock {
-		compatible = "fixed-clock";
-		#clock-cells = <0>;
-		clock-frequency = <45833333>;
-		clock-output-names = "mct";
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = <45833333>;
+			clock-output-names = "mct";
+		};
 	};
 
-};
 	soc: soc {
 		compatible = "simple-bus";
 		#address-cells = <1>;
@@ -135,7 +140,8 @@ fixed-rate-clocks {
 			interrupts = <GIC_PPI 9 (GIC_CPU_MASK_SIMPLE(8) |
 						 IRQ_TYPE_LEVEL_HIGH)>;
 		};
-					mct@10040000 {
+
+		mct@10040000 {
 			compatible = "samsung,exynos850-mct";
 			reg = <0x10040000 0x800>;
 			interrupts = <GIC_SPI 466 IRQ_TYPE_LEVEL_HIGH>,
@@ -154,9 +160,14 @@ fixed-rate-clocks {
 			clock-names = "fin_pll", "mct";
 	};
 	};
+
 	timer {
 		compatible = "arm,armv8-timer";
-		interrupts = <0x01 0x0d 0xff08 0x01 0x0e 0xff08 0x01 0x0b 0xff08 0x01 0x0a 0xff08>;
+		interrupts = 
+					<GIC_PPI 13 (GIC_CPU_MASK_SIMPLE(8) | IRQ_TYPE_LEVEL_LOW)>,
+					<GIC_PPI 14 (GIC_CPU_MASK_SIMPLE(8) | IRQ_TYPE_LEVEL_LOW)>,
+					<GIC_PPI 11 (GIC_CPU_MASK_SIMPLE(8) | IRQ_TYPE_LEVEL_LOW)>,
+					<GIC_PPI 10 (GIC_CPU_MASK_SIMPLE(8) | IRQ_TYPE_LEVEL_LOW)>;
 		clock-frequency = <26000000>;
 	};
 };
