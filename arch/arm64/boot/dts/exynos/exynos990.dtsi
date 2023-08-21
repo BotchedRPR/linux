@@ -23,7 +23,7 @@
 		interrupt-affinity = <&cpu0>;
 	};
     cpus {
-        #address-cells = <2>;
+		#address-cells = <1>;
 		#size-cells = <0>;
 
 		cpu0: cpu@0 {
@@ -127,7 +127,6 @@
 		compatible = "arm,psci";
 		method = "smc";
 	};
-
 fixed-rate-clocks {
 	
 	  	oscclk: xxti {
@@ -144,7 +143,6 @@ fixed-rate-clocks {
 	};
 
 };
-
 	soc: soc {
 		compatible = "simple-bus";
 		#address-cells = <1>;
@@ -163,21 +161,21 @@ fixed-rate-clocks {
 			interrupts = <GIC_PPI 9 (GIC_CPU_MASK_SIMPLE(8) |
 						 IRQ_TYPE_LEVEL_HIGH)>;
 		};
-			mct@10040000 {
-			compatible = "samsung,exynos4210-mct";
-			reg = <0x00 0x10040000 0x800>;
-			interrupts = <GIC_SPI 234 IRQ_TYPE_LEVEL_HIGH>,
-				<GIC_SPI 235 IRQ_TYPE_LEVEL_HIGH>,
-				<GIC_SPI 236 IRQ_TYPE_LEVEL_HIGH>,
-				<GIC_SPI 237 IRQ_TYPE_LEVEL_HIGH>,
-				<GIC_SPI 238 IRQ_TYPE_LEVEL_HIGH>,
-				<GIC_SPI 239 IRQ_TYPE_LEVEL_HIGH>,
-				<GIC_SPI 240 IRQ_TYPE_LEVEL_HIGH>,
-				<GIC_SPI 241 IRQ_TYPE_LEVEL_HIGH>,
-				<GIC_SPI 242 IRQ_TYPE_LEVEL_HIGH>,
-				<GIC_SPI 243 IRQ_TYPE_LEVEL_HIGH>,
-				<GIC_SPI 244 IRQ_TYPE_LEVEL_HIGH>,
-				<GIC_SPI 245 IRQ_TYPE_LEVEL_HIGH>;
+					mct@10040000 {
+			compatible = "samsung,exynos850-mct";
+			reg = <0x10040000 0x800>;
+			interrupts = <GIC_SPI 466 IRQ_TYPE_LEVEL_HIGH>,
+              <GIC_SPI 467 IRQ_TYPE_LEVEL_HIGH>,
+              <GIC_SPI 468 IRQ_TYPE_LEVEL_HIGH>,
+              <GIC_SPI 469 IRQ_TYPE_LEVEL_HIGH>,
+              <GIC_SPI 470 IRQ_TYPE_LEVEL_HIGH>,
+              <GIC_SPI 471 IRQ_TYPE_LEVEL_HIGH>,
+              <GIC_SPI 472 IRQ_TYPE_LEVEL_HIGH>,
+              <GIC_SPI 473 IRQ_TYPE_LEVEL_HIGH>,
+              <GIC_SPI 474 IRQ_TYPE_LEVEL_HIGH>,
+              <GIC_SPI 475 IRQ_TYPE_LEVEL_HIGH>,
+              <GIC_SPI 476 IRQ_TYPE_LEVEL_HIGH>,
+              <GIC_SPI 477 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&oscclk>, <&mctclock>;
 			clock-names = "fin_pll", "mct";
 	};
