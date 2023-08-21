@@ -17,10 +17,9 @@
 			     <GIC_SPI 91 IRQ_TYPE_LEVEL_HIGH>,
 			     <GIC_SPI 92 IRQ_TYPE_LEVEL_HIGH>,
 			     <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>,
-			     <GIC_SPI 109 IRQ_TYPE_LEVEL_HIGH>,
-			     <GIC_SPI 110 IRQ_TYPE_LEVEL_HIGH>,
-			     <GIC_SPI 111 IRQ_TYPE_LEVEL_HIGH>;
-		interrupt-affinity = <&cpu0>;
+			     <GIC_SPI 109 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-affinity = <&cpu0>, <&cpu1>, <&cpu2>, <&cpu3>,
+				     <&cpu4>, <&cpu5>;
 	};
     cpus {
 		#address-cells = <1>;
@@ -67,21 +66,6 @@
 			reg = <0x5>;
 			enable-method = "psci";
 		};
-
-		cpu6: cpu@200 {
-			device_type = "cpu";
-			compatible = "arm,mongoose", "arm,armv8";
-			reg = <0x00 0x100>;
-			enable-method = "psci";
-		};
-
-		cpu7: cpu@201 {
-			device_type = "cpu";
-			compatible = "arm,mongoose", "arm,armv8";
-			reg = <0x00 0x101>;
-			enable-method = "psci";
-		};
-
         cpu-map {
 			cluster0 {
 				core0 {
@@ -108,16 +92,6 @@
 
 				core1 {
 					cpu = <&cpu5>;
-				};
-			};
-
-			cluster2 {
-				core0 {
-					cpu = <&cpu6>;
-				};
-
-				core1 {
-					cpu = <&cpu7>;
 				};
 			};
 		};
