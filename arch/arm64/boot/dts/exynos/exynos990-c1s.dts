@@ -1,0 +1,40 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Copyright (c) 2024, Igor Belwon <thenxguy0@gmail.com>
+ */
+
+/dts-v1/;
+
+#include "exynos990.dtsi"
+
+/ {
+	model = "Samsung Galaxy Note20";
+	compatible = "samsung,c1s", "samsung,exynos990";
+
+	aliases {
+	};
+
+	memory@80000000 {
+		device_type = "memory";
+		reg = <0 0x90000000 0 0x60000000>;
+	};
+
+	chosen {
+		bootargs = "earlycon=tty0 console=tty0 maxcpus=8";
+
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+		stdout-path = "framebuffer0";
+
+		framebuffer0: framebuffer@9d400000 {
+			compatible = "simple-framebuffer";
+			reg = <0 0xF1000000 0 (1080 * 2400 * 4)>;
+			width = <1080>;
+			height = <2400>;
+			stride = <(1080 * 4)>;
+			format = "a8r8g8b8";
+			status= "okay";
+		};
+	};
+};
