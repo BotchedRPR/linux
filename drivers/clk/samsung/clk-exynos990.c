@@ -205,7 +205,7 @@ static int __init exynos990_cmu_probe(struct platform_device *pdev)
 
 	info = of_device_get_match_data(dev);
 	exynos_arm64_register_cmu(dev, dev->of_node, info);
-	dev_dbg(&pdev->dev, "Initialized sexynos 990 clk driver\n");
+	dev_err(&pdev->dev, "Initialized sexynos 990 clk driver\n");
 
 	return 0;
 }
