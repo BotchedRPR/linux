@@ -157,6 +157,16 @@
 			clocks = <&oscclk>, <&mctclock>;
 			clock-names = "fin_pll", "mct";
 		};
+
+		cmu_aud: clock-controller@18c00000 {
+			compatible = "samsung,exynos990-cmu-aud";
+			reg = <0x18c00000 0x8000>;
+			#clock-cells = <1>;
+
+			clocks = <&oscclk>;
+			clock-names = "oscclk";
+		};
+
 	};
 
 	timer {
