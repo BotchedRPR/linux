@@ -99,9 +99,11 @@ static void vita_uart_stop_tx(struct uart_port *port)
 
 static void vita_uart_tx_chars(struct uart_port *port)
 {
-	struct circ_buf *xmit = &port->state->xmit;
+	struct tty_port *tport = &port->state->port;
 
-	while (!uart_circ_empty(xmit)) {
+	while (!kfifo_is_empty(&tport->xmit_fifo)) {
+		unsigned char c;
+
 		while (!vita_uart_tx_ready(port))
 			cpu_relax();
 
@@ -115,11 +117,13 @@ static void vita_uart_tx_chars(struct uart_port *port)
 		if (uart_tx_stopped(port))
 			break;
 
-		vita_uart_write32(port, xmit->buf[xmit->tail], VITA_UART_WRITE_FIFO);
-		xmit->tail = (xmit->tail + 1) % UART_XMIT_SIZE;
+		if (!uart_fifo_get(port, &c))
+			break;
+
+		vita_uart_write32(port, c, VITA_UART_WRITE_FIFO);
 		port->icount.tx++;
 
-		if (uart_circ_chars_pending(xmit) < WAKEUP_CHARS)
+		if (kfifo_len(&tport->xmit_fifo) < WAKEUP_CHARS)
 			uart_write_wakeup(port);
 	}
 }
