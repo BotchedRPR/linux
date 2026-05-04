@@ -2,6 +2,7 @@
 // Copyright (C) 2021 Sergi Granell
 
 #include <linux/kernel.h>
+#include <linux/mod_devicetable.h>
 #include <linux/module.h>
 #include <linux/of_device.h>
 #include <linux/platform_device.h>
