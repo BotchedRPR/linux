@@ -997,6 +997,8 @@ patternProperties:
     description: Linux Automation GmbH
   "^lxd,.*":
     description: LXD Research & Display, LLC
+  "^lxs,.*":
+    description: LX Semicon Co., Ltd.
   "^m5stack,.*":
     description: M5Stack
   "^macnica,.*":
