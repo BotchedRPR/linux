@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/input/touchscreen/lxs,sw82907.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: LX Semicon SW82907 touchscreen controller
+
+maintainers:
+  - Igor Belwon <igor.belwon@mentallysanemainliners.org>
+
+allOf:
+  - $ref: touchscreen.yaml#
+
+properties:
+  compatible:
+    const: lxs,sw82907
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  reset-gpios:
+    maxItems: 1
+
+unevaluatedProperties: false
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - reset-gpios
+
+examples:
+  - |
+    #include <dt-bindings/interrupt-controller/irq.h>
+    i2c {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        touchscreen@28 {
+          compatible = "lxs,sw82907";
+          reg = <0x28>;
+          interrupt-parent = <&tlmm>;
+          interrupts = <162 IRQ_TYPE_EDGE_FALLING>;
+
+          reset-gpios = <&tlmm 161 GPIO_ACTIVE_LOW>;
+
+          pinctrl-0 = <&ts_irq>, <&ts_reset>;
+          pinctrl-names = "default";
+        };
+    };

@@ -1310,6 +1310,17 @@ config TOUCHSCREEN_SX8654
 	  To compile this driver as a module, choose M here: the
 	  module will be called sx8654.
 
+config TOUCHSCREEN_SW82907
+	tristate "LX Semicon SW82907 touchscreen"
+	depends on I2C
+	help
+	  Say Y here if you have a LX Semicon SW82907 touchscreen controller.
+
+	  If unsure, say N.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called sw82907.
+
 config TOUCHSCREEN_TPS6507X
 	tristate "TPS6507x based touchscreens"
 	depends on I2C
