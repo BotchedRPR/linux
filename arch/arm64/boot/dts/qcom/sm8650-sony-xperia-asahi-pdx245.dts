@@ -28,31 +28,6 @@
 		i2c14 = &i2c_hub_3;
 	};
 
-	chosen {
-		bootargs = "clk_ignore_unused pd_ignore_unused console=tty0";
-		#address-cells = <2>;
-		#size-cells = <2>;
-		ranges;
-
-		stdout-path = "framebuffer0";
-
-		framebuffer0: framebuffer-0 {
-			compatible = "simple-framebuffer";
-			memory-region = <&splashmem>;
-
-			width = <1080>;
-			height = <2340>;
-			stride = <(1080 * 4)>;
-			format = "a8r8g8b8";
-			panel = <&fb_panel>;
-
-			fb_panel: fb-panel {
-				width-mm = <74>;
-				height-mm = <162>;
-			};
-		};
-	};
-
 	gpio-keys {
 		compatible = "gpio-keys";
 		label = "gpio-keys";
@@ -199,6 +174,7 @@
 	};
 
 	reserved-memory {
+		/* We need to keep this in for our previous bootloader. */
 		splashmem: splash_region {
 			reg = <0x00 0xd5100000 0x00 0x2b00000>;
 			no-map;
@@ -489,16 +465,6 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
-		/*vreg_l2g_1p7: ldo2 {
-			regulator-name = "vreg_l3g_0p91";
-			regulator-min-microvolt = <1700000>;
-			regulator-max-microvolt = <1700000>;
-			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
-			regulator-allow-set-load;
-			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
-			RPMH_REGULATOR_MODE_HPM>;
-		};*/
-
 		vreg_l3g_0p91: ldo3 {
 			regulator-name = "vreg_l3g_0p91";
 			regulator-min-microvolt = <880000>;
@@ -561,14 +527,6 @@
 	/* m, n fail to register */
 };
 
-&mdss {
-	status = "disabled";
-};
-
-&dispcc {
-	status = "disabled";
-};
-
 &i2c4  {
 	status = "okay";
 	clock-frequency = <400000>;
@@ -586,26 +544,23 @@
 	};
 };
 
-/*
 &mdss {
 	status = "okay";
 };
 
-
 &mdss_dsi0 {
-	//vdda-supply = <&vreg_l3i_1p2>;
+	vdda-supply = <&vreg_l3i_1p2>;
 
 	status = "okay";
 
 	panel@0 {
-		compatible = "mdss,sony_unc";
+		compatible = "samsung,s6e3fae-amb646fj01", "samsung,s6e3fae";
 		reg = <0>;
 
 		reset-gpios = <&tlmm 133 GPIO_ACTIVE_LOW>;
 
 		vddio-supply = <&vreg_l12b_1p8>;
 		vci-supply = <&vreg_l13b_3p0>;
-		//vddr-supply = <&vreg_l2g_1p7>;
 
 		pinctrl-0 = <&disp0_reset_n_active>, <&mdp_vsync>;
 		pinctrl-1 = <&disp0_reset_n_suspend>, <&mdp_vsync>;
@@ -624,13 +579,24 @@
 	data-lanes = <0 1 2 3>;
 };
 
-
 &mdss_dsi0_phy {
 	vdds-supply = <&vreg_l1i_0p88>;
 
 	status = "okay";
 };
-*/
+
+&mdss_dp0 {
+	status = "okay";
+};
+
+&gpu {
+	status = "okay";
+};
+
+&gpu_zap_shader {
+	firmware-name = "qcom/sm8650/sony/asahi/gen70900_zap.mbn";
+};
+
 &gpi_dma1 {
 	status = "okay";
 };
@@ -809,28 +775,30 @@
 &ipa {
 	qcom,gsi-loader = "self";
 	memory-region = <&ipa_fw_mem>;
-	firmware-name = "qcom/sm8650/ipa_fws.mbn";
+	firmware-name = "qcom/sm8650/sony/asahi/ipa_fws.mbn";
 	status = "okay";
 };
 
 &remoteproc_adsp {
-	firmware-name = "qcom/sm8650/adsp.mbn",
-			"qcom/sm8650/adsp_dtb.mbn";
+	firmware-name = "qcom/sm8650/sony/asahi/adsp.mbn",
+			"qcom/sm8650/sony/asahi/adsp_dtb.mbn";
 
 	status = "okay";
 };
 
 &remoteproc_cdsp {
-	firmware-name = "qcom/sm8650/cdsp.mbn",
-			"qcom/sm8650/cdsp_dtb.mbn";
+	firmware-name = "qcom/sm8650/sony/asahi/cdsp.mbn",
+			"qcom/sm8650/sony/asahi/cdsp_dtb.mbn";
 
 	status = "okay";
 };
 
 &remoteproc_mpss {
-	firmware-name = "qcom/sm8650/modem.mbn",
-			"qcom/sm8650/modem_dtb.mbn";
+	firmware-name = "qcom/sm8650/sony/asahi/modem.mbn",
+			"qcom/sm8650/sony/asahi/modem_dtb.mbn";
 
+	// spam: Handover signaled, but it already happened
+	// fatal error received: mmoc_c.c:3235:=MMOC= MMOC sanity expired, trans_state 6 err_code 3151
 	status = "okay";
 };
 
