@@ -1,0 +1,71 @@
+# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/display/panel/samsung,s6e3fae.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Samsung s6e3fae AMOLED DDIC
+
+description: The s6e3fae is an AMOLED display driver IC connected to its panel.
+
+maintainers:
+  - Igor Belwon <igor.belwon@mentallysanemainliners.org>
+
+allOf:
+  - $ref: panel-common.yaml#
+
+properties:
+  compatible:
+    items:
+      - enum:
+          # Samsung 6.41 inch, 1080x2340 pixels, 19.5:9 ratio
+          - samsung,s6e3fae-amb646fj01
+      - const: samsung,s6e3fae
+
+  reg:
+    maxItems: 1
+
+  vddio-supply:
+    description: VDD I/O regulator
+
+  vci-supply:
+    description: VCI regulator
+
+required:
+  - compatible
+  - reset-gpios
+  - vddio-supply
+  - vci-supply
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    #include <dt-bindings/gpio/gpio.h>
+
+    dsi {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        panel@0 {
+          compatible = "samsung,s6e3fae-amb646fj01", "samsung,s6e3fae";
+          reg = <0>;
+
+          reset-gpios = <&tlmm 133 GPIO_ACTIVE_LOW>;
+
+          vddio-supply = <&vreg_l12b_1p8>;
+          vci-supply = <&vreg_l13b_3p0>;
+
+          pinctrl-0 = <&disp0_reset_n_active>, <&mdp_vsync>;
+          pinctrl-1 = <&disp0_reset_n_suspend>, <&mdp_vsync>;
+          pinctrl-names = "default", "sleep";
+
+          port {
+            panel0_in: endpoint {
+              remote-endpoint = <&mdss_dsi0_out>;
+            };
+          };
+        };
+    };
+
+...
