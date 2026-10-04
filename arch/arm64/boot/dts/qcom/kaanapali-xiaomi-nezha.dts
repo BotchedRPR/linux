@@ -117,6 +117,12 @@
 			reg = <0x00 0xfc800000 0x00 0x2b00000>;
 			no-map;
 		};
+
+		/delete-node/ adspslpi@a1400000;
+		adspslpi_mem: adspslpi@a1400000 {
+			reg = <0x0 0xa1400000 0x0 0x5580000>;
+			no-map;
+		};
 	};
 
 	gpio-keys {
@@ -178,8 +184,6 @@
 		};
 	};
 };
-
-&dispcc { status = "disabled"; };
 
 &apps_rsc {
 	regulators-0 {
@@ -794,16 +798,24 @@
 	};
 };
 
+&gpu {
+	status = "okay";
+};
+
+&gpu_zap_shader {
+	firmware-name = "qcom/kaanapali/xiaomi/nezha/gen80200_zap.mbn";
+};
+
 &mdss {
-	//status = "okay";
+	status = "okay";
 };
 
 &mdss_dsi0 {
 	vdda-supply = <&vreg_l1d_1p2>;
-	status = "fuck";
+	status = "okay";
 
 	panel@0 {
-		compatible = "novatek,nt37801";
+		compatible = "mdss,p1-42-0d-0b-p21-dsc";
 		reg = <0>;
 
 		pinctrl-0 = <&sde_dsi_active &sde_te_active &sde_esync0_suspend
@@ -831,6 +843,8 @@
 &mdss_dsi0_out {
 	remote-endpoint = <&panel0_in>;
 	data-lanes = <0 1 2 3>;
+
+	status = "okay";
 };
 
 &mdss_dsi0_phy {
