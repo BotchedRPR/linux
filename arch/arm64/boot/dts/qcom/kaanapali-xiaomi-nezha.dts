@@ -812,6 +812,26 @@
 	firmware-name = "qcom/kaanapali/xiaomi/nezha/gen80200_zap.mbn";
 };
 
+&spi19 {
+	status = "okay";
+
+	touchscreen@0 {
+		compatible = "synaptics,tcm-spi";
+		reg = <0>;
+		spi-max-frequency = <15000000>;
+
+		interrupt-parent = <&tlmm>;
+		interrupts = <158 IRQ_TYPE_LEVEL_LOW>;
+
+		reset-gpios = <&tlmm 66 GPIO_ACTIVE_LOW>;
+
+		vdd-supply = <&vreg_l4b_1p8>;
+		avdd-supply = <&vreg_l14b_3p2>;
+
+		status = "okay";
+	};
+};
+
 &mdss {
 	status = "okay";
 };
