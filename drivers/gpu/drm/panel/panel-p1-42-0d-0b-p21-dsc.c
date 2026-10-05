@@ -950,10 +950,10 @@ static int p1_42_0d_0b_p21_dsc_probe(struct mipi_dsi_device *dsi)
 
 	ctx->panel.prepare_prev_first = true;
 
-	ctx->panel.backlight = p1_42_0d_0b_p21_dsc_create_backlight(dsi);
-	if (IS_ERR(ctx->panel.backlight))
-		return dev_err_probe(dev, PTR_ERR(ctx->panel.backlight),
-				     "Failed to create backlight\n");
+	//ctx->panel.backlight = p1_42_0d_0b_p21_dsc_create_backlight(dsi);
+	//if (IS_ERR(ctx->panel.backlight))
+	//	return dev_err_probe(dev, PTR_ERR(ctx->panel.backlight),
+	//			     "Failed to create backlight\n");
 
 	drm_panel_add(&ctx->panel);
 
