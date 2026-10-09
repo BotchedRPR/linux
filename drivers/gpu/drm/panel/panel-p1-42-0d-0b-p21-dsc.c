@@ -8,6 +8,7 @@
 #include <linux/gpio/consumer.h>
 #include <linux/mod_devicetable.h>
 #include <linux/module.h>
+#include <linux/regulator/consumer.h>
 
 #include <video/mipi_display.h>
 
@@ -22,6 +23,7 @@ struct p1_42_0d_0b_p21_dsc {
 	struct drm_panel panel;
 	struct mipi_dsi_device *dsi;
 	struct drm_dsc_config dsc;
+	struct regulator_bulk_data supplies[3];
 	struct gpio_desc *reset_gpio;
 };
 
@@ -34,11 +36,11 @@ struct p1_42_0d_0b_p21_dsc *to_p1_42_0d_0b_p21_dsc(struct drm_panel *panel)
 static void p1_42_0d_0b_p21_dsc_reset(struct p1_42_0d_0b_p21_dsc *ctx)
 {
 	gpiod_set_value_cansleep(ctx->reset_gpio, 0);
-	usleep_range(5000, 6000);
+	usleep_range(10000, 11000);
 	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
-	usleep_range(5000, 6000);
+	usleep_range(10000, 11000);
 	gpiod_set_value_cansleep(ctx->reset_gpio, 0);
-	msleep(25);
+	msleep(40);
 }
 
 static int p1_42_0d_0b_p21_dsc_on(struct p1_42_0d_0b_p21_dsc *ctx)
@@ -780,11 +782,10 @@ static int p1_42_0d_0b_p21_dsc_off(struct p1_42_0d_0b_p21_dsc *ctx)
 {
 	struct mipi_dsi_multi_context dsi_ctx = { .dsi = ctx->dsi };
 
-	ctx->dsi->mode_flags &= ~MIPI_DSI_MODE_LPM;
-
-	mipi_dsi_dcs_set_display_brightness_multi(&dsi_ctx, 0x0000);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xfe, 0x00);
+	mipi_dsi_msleep(&dsi_ctx, 20);
 	mipi_dsi_dcs_set_display_off_multi(&dsi_ctx);
-	mipi_dsi_msleep(&dsi_ctx, 30);
+	mipi_dsi_usleep_range(&dsi_ctx, 16000, 17000);
 	mipi_dsi_dcs_enter_sleep_mode_multi(&dsi_ctx);
 	mipi_dsi_msleep(&dsi_ctx, 120);
 
@@ -794,9 +795,14 @@ static int p1_42_0d_0b_p21_dsc_off(struct p1_42_0d_0b_p21_dsc *ctx)
 static int p1_42_0d_0b_p21_dsc_prepare(struct drm_panel *panel)
 {
 	struct p1_42_0d_0b_p21_dsc *ctx = to_p1_42_0d_0b_p21_dsc(panel);
+	struct mipi_dsi_multi_context dsi_ctx = { .dsi = ctx->dsi };
 	struct device *dev = &ctx->dsi->dev;
 	struct drm_dsc_picture_parameter_set pps;
 	int ret;
+
+	dsi_ctx.accum_err = regulator_bulk_enable(ARRAY_SIZE(ctx->supplies), ctx->supplies);
+	if (dsi_ctx.accum_err)
+		return dsi_ctx.accum_err;
 
 	p1_42_0d_0b_p21_dsc_reset(ctx);
 
@@ -821,7 +827,7 @@ static int p1_42_0d_0b_p21_dsc_prepare(struct drm_panel *panel)
 		return ret;
 	}
 
-	msleep(28); /* TODO: Is this panel-dependent? */
+	msleep(28);
 
 	return 0;
 }
@@ -837,6 +843,7 @@ static int p1_42_0d_0b_p21_dsc_unprepare(struct drm_panel *panel)
 		dev_err(dev, "Failed to un-initialize panel: %d\n", ret);
 
 	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
+	regulator_bulk_disable(ARRAY_SIZE(ctx->supplies), ctx->supplies);
 
 	return 0;
 }
@@ -851,8 +858,8 @@ static const struct drm_display_mode p1_42_0d_0b_p21_dsc_mode = {
 	.vsync_start = 2608 + 64,
 	.vsync_end = 2608 + 64 + 32,
 	.vtotal = 2608 + 64 + 32 + 64,
-	.width_mm = 727,
-	.height_mm = 1580,
+	.width_mm = 73,
+	.height_mm = 158,
 	.type = DRM_MODE_TYPE_DRIVER,
 };
 
@@ -885,8 +892,6 @@ static int p1_42_0d_0b_p21_dsc_bl_update_status(struct backlight_device *bl)
 	return 0;
 }
 
-// TODO: Check if /sys/class/backlight/.../actual_brightness actually returns
-// correct values. If not, remove this function.
 static int p1_42_0d_0b_p21_dsc_bl_get_brightness(struct backlight_device *bl)
 {
 	struct mipi_dsi_device *dsi = bl_get_data(bl);
@@ -915,7 +920,7 @@ p1_42_0d_0b_p21_dsc_create_backlight(struct mipi_dsi_device *dsi)
 	struct device *dev = &dsi->dev;
 	const struct backlight_properties props = {
 		.type = BACKLIGHT_RAW,
-		.brightness = 16383,
+		.brightness = 8190, // Non-HBM operation
 		.max_brightness = 16383,
 	};
 
@@ -934,6 +939,14 @@ static int p1_42_0d_0b_p21_dsc_probe(struct mipi_dsi_device *dsi)
 				   DRM_MODE_CONNECTOR_DSI);
 	if (IS_ERR(ctx))
 		return PTR_ERR(ctx);
+
+	ctx->supplies[0].supply = "vddio";
+	ctx->supplies[1].supply = "vdd";
+	ctx->supplies[2].supply = "vci";
+	ret = devm_regulator_bulk_get(dev, ARRAY_SIZE(ctx->supplies),
+				      ctx->supplies);
+	if (ret < 0)
+		return dev_err_probe(dev, ret, "Failed to get regulators\n");
 
 	ctx->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
 	if (IS_ERR(ctx->reset_gpio))
@@ -966,12 +979,8 @@ static int p1_42_0d_0b_p21_dsc_probe(struct mipi_dsi_device *dsi)
 	/* TODO: Pass slice_per_pkt = 2 */
 	ctx->dsc.slice_height = 16;
 	ctx->dsc.slice_width = 600;
-	/*
-	 * TODO: hdisplay should be read from the selected mode once
-	 * it is passed back to drm_panel (in prepare?)
-	 */
-	WARN_ON(1200 % ctx->dsc.slice_width);
-	ctx->dsc.slice_count = 1200 / ctx->dsc.slice_width;
+
+	ctx->dsc.slice_count = 2;
 	ctx->dsc.bits_per_component = 10;
 	ctx->dsc.bits_per_pixel = 8 << 4; /* 4 fractional bits */
 	ctx->dsc.block_pred_enable = true;
