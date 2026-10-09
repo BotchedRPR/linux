@@ -25,32 +25,6 @@
 	compatible = "xiaomi,nezha", "qcom,kaanapali";
 	chassis-type = "handset";
 
-	chosen {
-		#address-cells = <2>;
-		#size-cells = <2>;
-		ranges;
-
-		//bootargs = "clk_ignore_unused pd_ignore_unused";
-		stdout-path = "framebuffer0";
-
-		framebuffer0: framebuffer-0 {
-			compatible = "simple-framebuffer";
-			memory-region = <&splashmem>;
-
-			width = <1200>;
-			height = <2608>;
-			stride = <(1200 * 4)>;
-			format = "a8r8g8b8";
-			panel = <&fb_panel>;
-
-			fb_panel: fb-panel {
-				width-mm = <74>;
-				height-mm = <162>;
-			};
-		};
-	};
-
-
 	clocks {
 		xo_board: xo-board {
 			compatible = "fixed-clock";
