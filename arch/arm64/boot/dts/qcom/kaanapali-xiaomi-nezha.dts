@@ -30,7 +30,7 @@
 		#size-cells = <2>;
 		ranges;
 
-		bootargs = "clk_ignore_unused pd_ignore_unused";
+		//bootargs = "clk_ignore_unused pd_ignore_unused";
 		stdout-path = "framebuffer0";
 
 		framebuffer0: framebuffer-0 {
@@ -188,6 +188,16 @@
 				};
 			};
 		};
+	};
+
+	reg_ts_vdd: regulator-tsvdd {
+		compatible = "regulator-fixed";
+		regulator-name = "ts_vdd";
+		regulator-min-microvolt = <3000000>;
+		regulator-max-microvolt = <3000000>;
+
+		gpio = <&tlmm 215 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
 	};
 };
 
@@ -580,6 +590,16 @@
 			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
 						   RPMH_REGULATOR_MODE_AUTO>;
 		};
+
+		vreg_l4i_1p8: ldo4 {
+			regulator-name = "vreg_l4i_1p8";
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_AUTO>;
+			regulator-allow-set-load;
+			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+			RPMH_REGULATOR_MODE_AUTO>;
+		};
 	};
 
 	regulators-5 {
@@ -825,8 +845,8 @@
 
 		reset-gpios = <&tlmm 66 GPIO_ACTIVE_LOW>;
 
-		vdd-supply = <&vreg_l4b_1p8>;
-		avdd-supply = <&vreg_l14b_3p2>;
+		vdd-supply = <&reg_ts_vdd>;
+		avdd-supply = <&vreg_l4i_1p8>;
 
 		status = "okay";
 	};
