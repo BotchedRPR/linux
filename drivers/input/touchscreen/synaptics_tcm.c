@@ -174,6 +174,44 @@ static int synaptics_tcm_identify_chip(struct synaptics_tcm_core *ts)
 	return ret;
 }
 
+static int synaptics_tcm_set_report(struct synaptics_tcm_core *ts, u8 report_code, bool enable)
+{
+	int ret;
+	struct synaptics_tcm_v1_message_header resp_hdr;
+	unsigned char cmd_buf[4];
+
+	cmd_buf[0] = enable ? CMD_ENABLE_REPORT : CMD_DISABLE_REPORT;
+	cmd_buf[1] = 0x01;
+	cmd_buf[2] = 0x00;
+	cmd_buf[3] = report_code;
+
+	ret = ts->bus->write(ts->bus, cmd_buf, sizeof(cmd_buf));
+	if (ret) {
+		dev_err(ts->dev, "Failed to write %s for report 0x%02x: %d\n",
+			enable ? "CMD_ENABLE_REPORT" : "CMD_DISABLE_REPORT", report_code, ret);
+		return ret;
+	}
+
+	msleep(20);
+
+	/* Read response from the device */
+	ret = synaptics_tcm_read_header(ts, (unsigned char *)&resp_hdr);
+	if (ret) {
+		dev_err(ts->dev, "Failed to read response header for report 0x%02x: %d\n", report_code, ret);
+		return ret;
+	}
+
+	/*
+	 * The firmware may be in coord mode already, as such,
+	 * this is non-critical.
+	 */
+	if (!resp_hdr.code)
+		dev_warn(ts->dev, "Command to %s report 0x%02x returned status: 0x%02x\n",
+			 enable ? "enable" : "disable", report_code, resp_hdr.code);
+
+	return 0;
+}
+
 static int synaptics_tcm_get_fw_config(struct synaptics_tcm_core *ts)
 {
 	int ret;
@@ -210,41 +248,92 @@ static int synaptics_tcm_get_fw_config(struct synaptics_tcm_core *ts)
 	ts->max_y =  get_unaligned_le16(appinfo.max_y);
 
 	dev_info(ts->dev, "Synaptics TCM controller fimware version: %u status: %u, max_x: %u, max_y: %u\n", get_unaligned_le16(appinfo.version), get_unaligned_le16(appinfo.status), ts->max_x, ts->max_y);
+
+	// Set controller into Coordinate mode
+	ret = synaptics_tcm_set_report(ts, REPORT_THP, false);
+	if (ret) {
+		dev_warn(ts->dev, "Failed to disable THP report (0xC0): %d\n", ret);
+	}
+
+	ret = synaptics_tcm_set_report(ts, REPORT_TOUCH, true);
+	if (ret) {
+		dev_err(ts->dev, "Failed to enable touch report (0x11): %d\n", ret);
+		return ret;
+	}
+
 	return ret;
 }
 
 #define REPORT_HDR_LEN 16
 #define OBJ_LEN 8
 
-static int synaptics_tcm_handle_touch_report(struct synaptics_tcm_core *ts, struct synaptics_tcm_report_point *report, size_t len)
+static void synaptics_tcm_handle_touch_report(struct synaptics_tcm_core *ts,
+					      const u8 *payload, u16 len)
 {
+	u8 num_active;
+	const struct synaptics_tcm_report_point *pt;
 	int i;
+	int max_slots = 10;
+	unsigned long active_mask = 0;
 
-	if (!ts->input)
-		return 0;
+	if (len < OBJ_LEN)
+		return;
 
-	for(i = 0; i < len; i++) {
-		input_mt_slot(ts->input, report[i].id & 0x0f);
-		input_mt_report_slot_state(ts->input, MT_TOOL_FINGER, true);
-		touchscreen_report_pos(ts->input, &ts->props, le16_to_cpu(report[i].x), le16_to_cpu(report[i].y), true);
-		input_report_abs(ts->input, ABS_MT_TOUCH_MAJOR, max(report[i].wx, report[i].wy));
-		input_report_abs(ts->input, ABS_MT_TOUCH_MINOR, min(report[i].wx, report[i].wy));
+	/* Byte 7 contains the active finger count */
+	num_active = payload[7];
+
+	for (i = 0; i < num_active; i++) {
+		int offset = OBJ_LEN + (i * sizeof(struct synaptics_tcm_report_point));
+
+		if (offset + sizeof(struct synaptics_tcm_report_point) > len)
+			break;
+
+		pt = (const struct synaptics_tcm_report_point *)(payload + offset);
+
+		u8 slot = pt->id & 0x0f;
+		u8 status = (pt->id >> 4) & 0x0f;
+		u16 x = le16_to_cpu(pt->x);
+		u16 y = le16_to_cpu(pt->y);
+		u16 z = le16_to_cpu(pt->z);
+
+		if (slot >= max_slots)
+			continue;
+
+		input_mt_slot(ts->input, slot);
+		input_mt_report_slot_state(ts->input, MT_TOOL_FINGER, status == 1);
+
+		if (status == 1) {
+			input_report_abs(ts->input, ABS_MT_POSITION_X, x);
+			input_report_abs(ts->input, ABS_MT_POSITION_Y, y);
+			input_report_abs(ts->input, ABS_MT_PRESSURE, z);
+			input_report_abs(ts->input, ABS_MT_TOUCH_MAJOR, pt->wx);
+			input_report_abs(ts->input, ABS_MT_TOUCH_MINOR, pt->wy);
+			__set_bit(slot, &active_mask);
+		}
 	}
 
+	/* Lift all slots not present in this frame */
+	for (i = 0; i < max_slots; i++) {
+		if (!test_bit(i, &active_mask)) {
+			input_mt_slot(ts->input, i);
+			input_mt_report_slot_state(ts->input, MT_TOOL_FINGER, false);
+		}
+	}
+
+	input_report_key(ts->input, BTN_TOUCH, active_mask != 0);
 	input_mt_sync_frame(ts->input);
 	input_sync(ts->input);
-	return 0;
 }
 
 static irqreturn_t synaptics_tcm_irq(int irq, void *data)
 {
 	int ret;
 	unsigned int payload_length = 0;
-	unsigned char *payload = NULL;
+	u8 payload_buf[128];
 	struct synaptics_tcm_v1_message_header header;
 	struct synaptics_tcm_core *ts = data;
 
-	ret = synaptics_tcm_read_header(ts, (unsigned char*)&header);
+	ret = synaptics_tcm_read_header(ts, (unsigned char *)&header);
 	if (ret) {
 		dev_err_ratelimited(ts->dev, "Failed to read header: %d\n", ret);
 		return IRQ_HANDLED;
@@ -252,30 +341,23 @@ static irqreturn_t synaptics_tcm_irq(int irq, void *data)
 
 	payload_length = get_unaligned_le16(header.length);
 
-	// Ignore 0 length messages
-	if(payload_length > 0) {
-		payload = kzalloc(payload_length, GFP_KERNEL);
-		if (!payload)
-			return IRQ_HANDLED;
-
-		ret = synaptics_tcm_continue_read(ts, payload_length, payload);
+	if (payload_length > 0 && payload_length <= sizeof(payload_buf)) {
+		ret = synaptics_tcm_continue_read(ts, payload_length, payload_buf);
 		if (ret) {
 			dev_err_ratelimited(ts->dev, "Failed to read payload: %d\n", ret);
-			goto out;
+			return IRQ_HANDLED;
+		}
+
+		// We do not support any input events beside touch
+		if (header.code == REPORT_TOUCH) {
+			synaptics_tcm_handle_touch_report(ts, payload_buf, payload_length);
 		}
 	}
 
-	// We do not support any input events beside touch
-	if(header.code == REPORT_TOUCH && payload_length >= REPORT_HDR_LEN) {
-		synaptics_tcm_handle_touch_report(ts, (struct synaptics_tcm_report_point*)(payload + REPORT_HDR_LEN), (payload_length - REPORT_HDR_LEN) / OBJ_LEN);
-	}
-
-out:
-	kfree(payload);
 	return IRQ_HANDLED;
 }
 
-static int synaptics_tcm_input_dev_config(struct synaptics_tcm_core *ts)
+static int synaptics_tcm_input_config(struct synaptics_tcm_core *ts)
 {
 	int ret;
 
@@ -350,7 +432,7 @@ synaptics_tcm_get_fw_config(ts);
 		return ret;
 	}
 
-	ret = synaptics_tcm_input_dev_config(ts);
+	ret = synaptics_tcm_input_config(ts);
 	if (ret) {
 		dev_err(dev, "input device setup failed: %d\n", ret);
 		return ret;

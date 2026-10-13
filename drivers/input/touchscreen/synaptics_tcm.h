@@ -14,9 +14,9 @@
 
 #include <linux/pm.h>
 #include <linux/input/touchscreen.h>
+
 #define SYNAPTICS_TCM_V1_MESSAGE_PADDING 0x5a
 #define SYNAPTICS_TCM_V1_MESSAGE_MARKER 0xa5
-
 
 #define SYNAPTICS_TCM_MSG_CRC_LENGTH (2)
 #define SYNAPTICS_TCM_EXTRA_RC_LENGTH (1)
@@ -25,15 +25,17 @@
 
 #define MAX_SIZE_CONFIG_ID (16)
 
-#define CMD_GET_APPLICATION_INFO 0x20
+#define CMD_ENABLE_REPORT		0x05
+#define CMD_DISABLE_REPORT		0x06
+#define CMD_GET_APPLICATION_INFO	0x20
 
 struct synaptics_tcm_report_point {
 	u8 id;
 	__le16 x;
 	__le16 y;
+	__le16 z;
 	u8 wx;
 	u8 wy;
-	u8 unknwon;
 } __packed;
 
 enum synaptics_tcm_report_type {
@@ -44,8 +46,9 @@ enum synaptics_tcm_report_type {
 	REPORT_DEBUG = 0x14,
 	REPORT_HBP_ACTIVE_FRAME = 0x23,
 	REPORT_LOG = 0x9f,
-	REPORT_POWER_STATE_INFO = 0xFE,
 	REPORT_DIFF  = 0xaa,
+	REPORT_THP = 0xc0,
+	REPORT_POWER_STATE_INFO = 0xfe,
 };
 
 enum touch_report_code {
